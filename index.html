@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Consulta de Laptops</title>
+    <meta name="description" content="Sistema para consultar información de laptops por modelo">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-attachment: fixed;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        header {
+            background: linear-gradient(to right, #1a2a6c, #2c3e90);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" opacity="0.1"><path d="M20,20 L80,20 L80,80 L20,80 Z" fill="none" stroke="white" stroke-width="2"/><path d="M30,30 L70,30 L70,70 L30,70 Z" fill="none" stroke="white" stroke-width="1"/></svg>');
+        }
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            position: relative;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 5px;
+            position: relative;
+        }
+        .search-section {
+            padding: 25px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .search-container {
+            display: flex;
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #3498db;
+            border-radius: 8px 0 0 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+        }
+        .search-button {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .search-button:hover {
+            background: linear-gradient(to bottom, #2980b9, #1a6ca8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .search-button:active {
+            transform: translateY(0);
+        }
+        .model-icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        .details-section {
+            padding: 25px;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .details-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s;
+        }
+        .details-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 0;
+        }
+        .detail-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+        }
+        .detail-item:nth-child(odd) {
+            background-color: #f8f9fa;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+            width: 150px;
+            flex-shrink: 0;
+        }
+        .detail-value {
+            color: #34495e;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .value-text {
+            transition: all 0.3s ease;
+        }
+        .toggle-btn {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .toggle-btn:hover {
+            background: linear-gradient(to bottom, #2980b9, #1a6ca8);
+            transform: translateY(-2px);
+        }
+        .toggle-btn.hide {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+        }
+        .toggle-btn.hide:hover {
+            background: linear-gradient(to bottom, #c0392b, #a93226);
+        }
+        .highlight {
+            background-color: #fff9e6 !important;
+            border-left: 4px solid #f1c40f;
+        }
+        .full-list {
+            padding: 0 25px 25px;
+        }
+        .section-title {
+            color: #2c3e50;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-size: 1.4rem;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .data-table th {
+            background: linear-gradient(to right, #2c3e50, #34495e);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .data-table tr:hover {
+            background-color: #e8f4fd;
+        }
+        .data-table tr.selected {
+            background-color: #fff9e6;
+            border-left: 4px solid #f1c40f;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .results-count {
+            background-color: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        .reveal-animation {
+            animation: reveal 0.5s ease-out;
+        }
+        @keyframes reveal {
+            0% { opacity: 0; transform: translateY(5px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .search-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-container {
+                min-width: 100%;
+            }
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            .data-table {
+                font-size: 0.85rem;
+            }
+            .data-table th, .data-table td {
+                padding: 8px 10px;
+            }
+            .detail-value {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Consulta de Laptops</h1>
+            <div class="subtitle">Búsqueda por modelo</div>
+        </header>
+        
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="model-input" class="search-input" placeholder="Ingrese el modelo de la laptop...">
+                <button id="search-button" class="search-button">
+                    <span class="model-icon">🔍</span> Buscar
+                </button>
+            </div>
+            <div style="color: #7f8c8d; font-size: 0.9rem;">
+                Ingrese el modelo para consultar los detalles del equipo
+            </div>
+        </div>
+        
+        <div class="details-section">
+            <div class="details-card">
+                <div class="card-header">Detalles del Equipo</div>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Modelo:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="modelo">-</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Marca:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="marca">-</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Serie:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="serie">-</span>
+                            <button id="toggle-serie" class="toggle-btn">Mostrar</button>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Código de Barras:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="barras">-</span>
+                            <button id="toggle-barras" class="toggle-btn">Mostrar</button>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Procesador:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="procesador">-</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Disco:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="disco">-</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Memoria:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="memoria">-</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tarjeta de Video:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="tarjeta-video">-</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Pulgadas:</div>
+                        <div class="detail-value">
+                            <span class="value-text" id="pulgadas">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="full-list">
+            <h2 class="section-title">
+                Listado Completo de Laptops 
+                <span class="results-count" id="results-count">0 resultados</span>
+            </h2>
+            <table class="data-table" id="laptops-table">
+                <thead>
+                    <tr>
+                        <th>Modelo</th>
+                        <th>Marca</th>
+                        <th>Serie</th>
+                        <th>Código de Barras</th>
+                        <th>Procesador</th>
+                        <th>Disco</th>
+                        <th>Memoria</th>
+                        <th>Tarjeta de Video</th>
+                        <th>Pulgadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Los datos se llenarán con JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Base de datos de laptops con los datos proporcionados
+        const laptops = [
+            {
+                modelo: "HP ZBook Firefly 14 G8",
+                marca: "HP",
+                serie: "5CG22184LK",
+                barras: "248505",
+                procesador: "11th Gen Intel(R) Core(TM) i7-1165G7 @2.80GHz",
+                disco: "500 GB",
+                memoria: "16 GB",
+                tarjetaVideo: "Intel(R) Iris(R) Xe Graphics",
+                pulgadas: "14"
+            },
+            {
+                modelo: "HP ZBook Firefly 14 G8",
+                marca: "HP",
+                serie: "5CG221848W",
+                barras: "248502",
+                procesador: "11th Gen Intel(R) Core(TM) i7-1165G7 @2.80GHz",
+                disco: "500 GB",
+                memoria: "16 GB",
+                tarjetaVideo: "NVIDIA T500 Intel(R) Iris(R) Xe Graphics",
+                pulgadas: "14"
+            },
+            {
+                modelo: "HP ZBook Firefly 14 G8",
+                marca: "HP",
+                serie: "5CG221849K",
+                barras: "248548",
+                procesador: "11th Gen Intel(R) Core(TM) i7-1165G7 @2.80GHz",
+                disco: "500",
+                memoria: "16 GB",
+                tarjetaVideo: "NVIDIA T500 Intel(R) Iris(R) Xe Graphics",
+                pulgadas: "14"
+            },
+            {
+                modelo: "ThinkPad X1 Carbon",
+                marca: "Lenovo",
+                serie: "R9-0A0C0F",
+                barras: "217590",
+                procesador: "Intel(R) Core(TM) i7-4600 CPU @ 2.10GHz",
+                disco: "250 GB",
+                memoria: "8 GB",
+                tarjetaVideo: "Intel(R) HD Graphics Family",
+                pulgadas: "14"
+            },
+            {
+                modelo: "HP ZBook Firefly 14 G8",
+                marca: "HP",
+                serie: "5CG22183YP",
+                barras: "248546",
+                procesador: "11th Gen Intel(R) Core(TM) i7-1165G7 @2.80GHz",
+                disco: "500",
+                memoria: "16",
+                tarjetaVideo: "NVIDIA T500 Intel(R) Iris(R) Xe Graphics",
+                pulgadas: "14"
+            },
+            {
+                modelo: "HP ZBook Firefly 14 G8",
+                marca: "HP",
+                serie: "5CG22184Q4",
+                barras: "248547",
+                procesador: "11th Gen Intel(R) Core(TM) i7-1165G7 @2.80GHz",
+                disco: "500",
+                memoria: "16",
+                tarjetaVideo: "NVIDIA T500 Intel(R) Iris(R) Xe Graphics",
+                pulgadas: "14"
+            }
+        ];
+
+        // Elementos DOM
+        const modelInput = document.getElementById('model-input');
+        const searchButton = document.getElementById('search-button');
+        const tableBody = document.querySelector('#laptops-table tbody');
+        const resultsCount = document.getElementById('results-count');
+        const toggleSerieBtn = document.getElementById('toggle-serie');
+        const toggleBarrasBtn = document.getElementById('toggle-barras');
+
+        // Variables de estado
+        let currentLaptop = null;
+        let serieVisible = false;
+        let barrasVisible = false;
+
+        // Función para formatear serie (primeros 7 dígitos + 4 asteriscos)
+        function formatSerie(serie) {
+            if (serie && serie.length >= 7) {
+                return serie.substring(0, 7) + '****';
+            }
+            return serie;
+        }
+
+        // Función para formatear código de barras (primeros 4 dígitos + 2 asteriscos)
+        function formatBarras(barras) {
+            if (barras && barras.length >= 4) {
+                return barras.substring(0, 4) + '**';
+            }
+            return barras;
+        }
+
+        // Llenar la tabla completa
+        function populateTable(laptopsToShow = laptops) {
+            tableBody.innerHTML = '';
+            laptopsToShow.forEach(laptop => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${laptop.modelo}</td>
+                    <td>${laptop.marca}</td>
+                    <td>${formatSerie(laptop.serie)}</td>
+                    <td>${formatBarras(laptop.barras)}</td>
+                    <td>${laptop.procesador}</td>
+                    <td>${laptop.disco}</td>
+                    <td>${laptop.memoria}</td>
+                    <td>${laptop.tarjetaVideo}</td>
+                    <td>${laptop.pulgadas}"</td>
+                `;
+                // Añadir event listener para mostrar detalles al hacer clic en la fila
+                row.addEventListener('click', () => {
+                    displayLaptopDetails(laptop);
+                });
+                tableBody.appendChild(row);
+            });
+            
+            // Actualizar contador de resultados
+            resultsCount.textContent = `${laptopsToShow.length} resultados`;
+        }
+
+        // Buscar laptops por modelo
+        function searchLaptopsByModel(model) {
+            const searchTerm = model.toLowerCase().trim();
+            if (!searchTerm) {
+                return laptops;
+            }
+            
+            return laptops.filter(laptop => 
+                laptop.modelo.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Actualizar botones de mostrar/ocultar
+        function updateToggleButtons() {
+            // Actualizar botón de serie
+            if (serieVisible) {
+                toggleSerieBtn.textContent = 'Ocultar';
+                toggleSerieBtn.classList.add('hide');
+            } else {
+                toggleSerieBtn.textContent = 'Mostrar';
+                toggleSerieBtn.classList.remove('hide');
+            }
+            
+            // Actualizar botón de código de barras
+            if (barrasVisible) {
+                toggleBarrasBtn.textContent = 'Ocultar';
+                toggleBarrasBtn.classList.add('hide');
+            } else {
+                toggleBarrasBtn.textContent = 'Mostrar';
+                toggleBarrasBtn.classList.remove('hide');
+            }
+        }
+
+        // Mostrar detalles de la laptop
+        function displayLaptopDetails(laptop) {
+            if (laptop) {
+                currentLaptop = laptop;
+                
+                // Resetear estado de visibilidad
+                serieVisible = false;
+                barrasVisible = false;
+                updateToggleButtons();
+                
+                // Actualizar detalles
+                document.getElementById('modelo').textContent = laptop.modelo;
+                document.getElementById('marca').textContent = laptop.marca;
+                document.getElementById('procesador').textContent = laptop.procesador;
+                document.getElementById('disco').textContent = laptop.disco;
+                document.getElementById('memoria').textContent = laptop.memoria;
+                document.getElementById('tarjeta-video').textContent = laptop.tarjetaVideo;
+                document.getElementById('pulgadas').textContent = laptop.pulgadas + '"';
+                
+                // Actualizar serie y código de barras (inicialmente formateados)
+                document.getElementById('serie').textContent = formatSerie(laptop.serie);
+                document.getElementById('barras').textContent = formatBarras(laptop.barras);
+                
+                // Resaltar la fila correspondiente en la tabla completa
+                const allRows = tableBody.querySelectorAll('tr');
+                allRows.forEach(row => {
+                    row.classList.remove('selected');
+                    if (row.cells[0].textContent === laptop.modelo && 
+                        row.cells[2].textContent === formatSerie(laptop.serie)) {
+                        row.classList.add('selected');
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+                
+                // Añadir efecto de resaltado a la tarjeta de detalles
+                const detailsCard = document.querySelector('.details-card');
+                detailsCard.classList.add('highlight', 'pulse');
+                setTimeout(() => {
+                    detailsCard.classList.remove('pulse');
+                }, 1500);
+            } else {
+                // Mostrar mensaje de no encontrado
+                currentLaptop = null;
+                document.getElementById('modelo').textContent = '-';
+                document.getElementById('marca').textContent = '-';
+                document.getElementById('serie').textContent = '-';
+                document.getElementById('barras').textContent = '-';
+                document.getElementById('procesador').textContent = '-';
+                document.getElementById('disco').textContent = '-';
+                document.getElementById('memoria').textContent = '-';
+                document.getElementById('tarjeta-video').textContent = '-';
+                document.getElementById('pulgadas').textContent = '-';
+                
+                // Quitar el resaltado de todas las filas
+                const allRows = tableBody.querySelectorAll('tr');
+                allRows.forEach(row => {
+                    row.classList.remove('selected');
+                });
+            }
+        }
+
+        // Manejar la búsqueda
+        function handleSearch() {
+            const model = modelInput.value.trim();
+            const results = searchLaptopsByModel(model);
+            populateTable(results);
+            
+            if (results.length > 0) {
+                // Mostrar detalles de la primera laptop encontrada
+                displayLaptopDetails(results[0]);
+            } else {
+                displayLaptopDetails(null);
+            }
+        }
+
+        // Alternar visibilidad de la serie
+        function toggleSerieVisibility() {
+            if (!currentLaptop) return;
+            
+            serieVisible = !serieVisible;
+            const serieElement = document.getElementById('serie');
+            
+            if (serieVisible) {
+                serieElement.textContent = currentLaptop.serie;
+                serieElement.classList.add('reveal-animation');
+            } else {
+                serieElement.textContent = formatSerie(currentLaptop.serie);
+                serieElement.classList.remove('reveal-animation');
+            }
+            
+            updateToggleButtons();
+            
+            // Remover la clase de animación después de que termine
+            setTimeout(() => {
+                serieElement.classList.remove('reveal-animation');
+            }, 500);
+        }
+
+        // Alternar visibilidad del código de barras
+        function toggleBarrasVisibility() {
+            if (!currentLaptop) return;
+            
+            barrasVisible = !barrasVisible;
+            const barrasElement = document.getElementById('barras');
+            
+            if (barrasVisible) {
+                barrasElement.textContent = currentLaptop.barras;
+                barrasElement.classList.add('reveal-animation');
+            } else {
+                barrasElement.textContent = formatBarras(currentLaptop.barras);
+                barrasElement.classList.remove('reveal-animation');
+            }
+            
+            updateToggleButtons();
+            
+            // Remover la clase de animación después de que termine
+            setTimeout(() => {
+                barrasElement.classList.remove('reveal-animation');
+            }, 500);
+        }
+
+        // Event Listeners
+        searchButton.addEventListener('click', handleSearch);
+        modelInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+        
+        toggleSerieBtn.addEventListener('click', toggleSerieVisibility);
+        toggleBarrasBtn.addEventListener('click', toggleBarrasVisibility);
+
+        // Inicializar la tabla al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            populateTable();
+            modelInput.focus();
+        });
+    </script>
+</body>
+</html>
